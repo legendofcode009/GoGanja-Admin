@@ -1,0 +1,9 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Disallow: /clinics
+Disallow: /settings
+Disallow: /add-clinic
+Disallow: /edit-clinic/
+Disallow: /bookings
+Crawl-delay: 20
+Visit-time: 0200-0300
