@@ -127,23 +127,10 @@ const LatestUpdates = () => {
           const fetchedBookings = await Promise.all(
             querySnapshot.docs.map(async (bookingDoc) => {
               const bookingData = bookingDoc.data();
-              // if (!bookingData.clinicId) {
-              //   console.error("No clinicId found for booking:", bookingDoc.id);
-              //   return {
-              //     ...bookingData,
-              //     id: bookingDoc.id,
-              //     hotelName: "-",
-              //   };
-              // }
 
-              const clinicRef = doc(db, "clinics", bookingData.clinicId);
-              const clinicSnap = await getDoc(clinicRef);
-
-              if (!clinicSnap.exists()) {
-                console.error(
-                  "No clinic found for clinicId:",
-                  bookingData.clinicId
-                );
+              // Validate clinicId
+              if (!bookingData.clinicId) {
+                console.error("No clinicId found for booking:", bookingDoc.id);
                 return {
                   ...bookingData,
                   id: bookingDoc.id,
@@ -151,16 +138,30 @@ const LatestUpdates = () => {
                 };
               }
 
-              const clinicData = clinicSnap.data();
-              console.log("Clinic data:", clinicData);
+              const clinicRef = doc(db, "clinics", bookingData.clinicId);
+              const clinicSnap = await getDoc(clinicRef);
 
+              if (!clinicSnap.exists()) {
+                console.warn(
+                  "No clinic found for clinicId:",
+                  bookingData.clinicId
+                );
+                return {
+                  ...bookingData,
+                  id: bookingDoc.id,
+                  hotelName: "Unknown Clinic",
+                };
+              }
+
+              const clinicData = clinicSnap.data();
               return {
                 id: bookingDoc.id,
                 ...bookingData,
-                hotelName: clinicData?.hotelName || "-",
+                hotelName: clinicData?.hotelName || "Unnamed Clinic",
               };
             })
           );
+
           console.log("Fetched bookings:", fetchedBookings);
           setBookings(fetchedBookings);
         } catch (error) {
@@ -168,7 +169,6 @@ const LatestUpdates = () => {
         }
       }
     };
-
     fetchBookings();
   }, [clinicAdminUid]);
 

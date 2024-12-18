@@ -1,6 +1,5 @@
 {
   "hosting": {
-    "target": "clinic",
     "public": "build",
     "ignore": [
       "firebase.json",

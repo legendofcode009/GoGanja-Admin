@@ -126,18 +126,29 @@ const CalendarComponent = () => {
   const [addBooking, setAddBooking] = useState(false);
   const [clinics, setClinics] = useState([]);
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(true);
 
   const getClinics = async () => {
     try {
+      setLoading(true); // Start loading
       const uid = localStorage.getItem("uid");
       const clinicsCollection = collection(db, "clinics");
       const q = query(clinicsCollection, where("clinicAdmin", "==", uid));
       const clinicData = await getDocs(q);
       setClinics(clinicData.docs.map((doc) => ({ ...doc.data(), id: doc.id })));
+      console.log(clinics);
     } catch (error) {
-      console.error("Error fetching hotels:", error);
+      console.error("Error fetching clinics:", error);
+    } finally {
+      setLoading(false); // End loading
     }
   };
+
+  useEffect(() => {
+    if (addBooking) {
+      getClinics();
+    }
+  }, [addBooking]);
 
   const getSelectedBookingDetails = async () => {
     try {
@@ -177,6 +188,7 @@ const CalendarComponent = () => {
       );
       const data = await getDocs(docsQuery);
       setEvents(data.docs.map((doc) => ({ ...doc.data(), id: doc.id })));
+      console.log(data);
     } catch (error) {
       console.error("Error getHotel:", error);
     }
@@ -632,7 +644,8 @@ const CalendarComponent = () => {
   };
 
   const onAddNewBookingButtonClick = () => {
-    setFormData(defaultValues);
+    const defaultClinicId = clinics.length > 0 ? clinics[0].id : "";
+    setFormData({ ...defaultValues, clinicId: defaultClinicId });
     setAddBooking(true);
     setUpdateModalOpen(true);
   };

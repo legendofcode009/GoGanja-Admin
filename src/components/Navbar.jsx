@@ -296,6 +296,7 @@ export default function Navbar() {
 
   return (
     <Grid
+      item
       xs={2}
       sm={4}
       md={4}
