@@ -3,7 +3,6 @@ import {
   Button,
   FormControl,
   Grid,
-  InputLabel,
   MenuItem,
   TextField,
   Typography,
@@ -16,16 +15,12 @@ import "../Dashboard.css";
 import * as React from "react";
 import { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
-import Sidenav from "../components/Sidenav";
-import SvgIcon from "@mui/material/SvgIcon";
 import ThailandBahtIcon from "../components/CustomIcons";
 import { db, storage } from "../firebase-config";
 import CloseIcon from "@mui/icons-material/Close";
-import Swal from "sweetalert2";
 import { commonStyles } from "../utilities/commonStyles";
 import AddIcon from "@mui/icons-material/Add";
 import {
-  addDoc,
   collection,
   doc,
   getDoc,
@@ -38,7 +33,6 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import MultiSelect from "../components/MultiSelect";
 import MultiSelectTreatments from "../components/MultiSelectTreatments";
-import Icon from "@mui/material/Icon";
 import dayjs from "dayjs";
 import { useTranslation } from "react-i18next";
 import { useAppStore } from "../appStore";
@@ -115,6 +109,7 @@ export default function EditForm() {
       Saturday: { opening: null, closing: null, closed: false },
       Sunday: { opening: null, closing: null, closed: false },
     },
+    rating: 3.9,
   });
   const [apiOpeningHours, setAPIOpeningHours] = useState({
     openingHours: {

@@ -121,15 +121,6 @@ export default function ClinicsList() {
     setIsLoading(false);
   };
 
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(+event.target.value);
-    setPage(0);
-  };
-
   const deleteUser = (id) => {
     Swal.fire({
       title: t("areYouSure"),
@@ -158,22 +149,6 @@ export default function ClinicsList() {
       getClinics();
     } catch (error) {
       Swal.fire(t("error"), t("registrationUnSuccessful"), "error");
-    }
-  };
-
-  const filterData = (v) => {
-    if (v) {
-      // setRows([v]);
-      setRows(
-        clinicsList.filter((data) =>
-          data?.name?.toLowerCase()?.includes(v?.name?.toLowerCase())
-        )
-      );
-      // setRows(rows);
-    } else {
-      setRows([]);
-      // getClinics();
-      setRows(clinicsList);
     }
   };
 
