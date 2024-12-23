@@ -77,11 +77,11 @@ export default function EditForm() {
       label: "Pattaya",
     },
     {
-      value: "KoSamui",
+      value: "Ko Samui",
       label: "Ko Samui",
     },
     {
-      value: "ChiangMai",
+      value: "Chiang Mai",
       label: "Chiang Mai",
     },
     {
@@ -332,13 +332,13 @@ export default function EditForm() {
 
         // Define the order of days
         const daysOrder = [
+          "Sunday",
           "Monday",
           "Tuesday",
           "Wednesday",
           "Thursday",
           "Friday",
           "Saturday",
-          "Sunday",
         ];
 
         // Process openingHours
@@ -362,7 +362,7 @@ export default function EditForm() {
           ...data,
           openingHours: processedOpeningHours,
         });
-        setSelectedServices(data?.services);
+        setSelectedServices(data?.services?.map((service) => service.name));
         setSelectedTreatments(data?.treatments);
         setSelectedCity(data?.city);
 
@@ -415,7 +415,6 @@ export default function EditForm() {
       ];
 
       const newData = {
-        services: selectedServices,
         treatments: selectedTreatments,
         openingHours: apiOpeningHours,
         name: formData?.name,
@@ -425,6 +424,10 @@ export default function EditForm() {
         important_information: formData?.important_information,
         featuredImage: featuredImageUrl,
         additionalImages: allAdditionalImages,
+        services: selectedServices.map((service, index) => ({
+          name: service,
+          price: 10 * index,
+        })),
       };
 
       await updateDoc(clinicRef, newData, { merge: false });

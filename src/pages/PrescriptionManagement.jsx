@@ -32,35 +32,37 @@ import {
 import { commonStyles } from "../utilities/commonStyles";
 import { db, auth } from "../firebase-config";
 import { onAuthStateChanged } from "firebase/auth";
+import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 
+const emptyPrescription = {
+  clientAddress: "",
+  patientName: "",
+  diagnosis: "",
+  email: "",
+  phoneNumber: "",
+  clinicAddress: "",
+  clinicAdminUid: "",
+  doctorName: "",
+  createdAt: "",
+  updatedAt: "",
+  medications: [{ name: "", dosage: "", quantity: "" , price: ""}],
+  recipeCode: "",
+  status: "",
+  totalPrice: "",
+  userId: "",
+};
+
 const PrescriptionsManagement = () => {
+  const navigate = useNavigate();
   const [rowsPerPage] = useState(10);
   const [error, setError] = useState(null);
   const [prescriptions, setPrescriptions] = useState([]);
   const [allSubscriptionPage, setAllSubscriptionPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [clinicAdminUid, setClinicAdminUid] = useState("");
-  const [prescriptionData, setPrescriptionData] = useState({
-    medicineName: "",
-    dosage: "",
-    quantity: "",
-    patientName: "",
-    diagnosis: "",
-    email: "",
-    phoneNumber: "",
-    address: "",
-  });
-  const [errors, setErrors] = useState({
-    medicineName: "",
-    dosage: "",
-    quantity: "",
-    patientName: "",
-    diagnosis: "",
-    email: "",
-    phoneNumber: "",
-    address: "",
-  });
+  const [prescriptionData, setPrescriptionData] = useState(emptyPrescription);
+  const [errors, setErrors] = useState(emptyPrescription);
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
 
@@ -85,10 +87,24 @@ const PrescriptionsManagement = () => {
   };
 
   const handleInputChange = (e) => {
-    setPrescriptionData({
-      ...prescriptionData,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+
+    if (name.startsWith("medications_")) {
+      const fieldName = name.split("_")[1];
+      setPrescriptionData((prevData) => ({
+        ...prevData,
+        medications: prevData.medications.map((medication, index) =>
+          index === 0 ? { ...medication, [fieldName]: value } : medication
+        ),
+      }));
+    } else {
+      setPrescriptionData((prevData) => ({
+        ...prevData,
+        [name]: value,
+      }));
+    }
+
+    console.log(prescriptionData);
     validateInput(e);
   };
 
@@ -96,64 +112,49 @@ const PrescriptionsManagement = () => {
     const { name, value } = e.target;
     let error = "";
 
-    switch (name) {
-      case "medicineName":
-        if (!/^[a-zA-Z\s]+$/.test(value)) {
-          error =
-            "Please enter a valid medicine name (only letters and spaces allowed)";
-        } else if (value.trim() === "") {
-          error = "This field is required";
-        }
-        break;
-      case "dosage":
-        if (!/^\d+(\.\d+)?$/.test(value)) {
-          error =
-            "Please enter a valid dosage (only numbers and decimal points allowed)";
-        } else if (value.trim() === "") {
-          error = "This field is required";
-        }
-        break;
-      case "quantity":
-        if (!/^\d+$/.test(value)) {
-          error = "Please enter a valid quantity (only whole numbers allowed)";
-        } else if (value.trim() === "") {
-          error = "This field is required";
-        }
-        break;
-      case "patientName":
-        if (!/^[a-zA-Z\s]+$/.test(value)) {
-          error =
-            "Please enter a valid patient name (only letters and spaces allowed)";
-        } else if (value.trim() === "") {
-          error = "This field is required";
-        }
-        break;
-      case "diagnosis":
-        if (value.trim() === "") {
-          error = "This field is required";
-        }
-        break;
-      case "email":
-        if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(value)) {
-          error = "Please enter a valid email address";
-        } else if (value.trim() === "") {
-          error = "This field is required";
-        }
-        break;
-      case "phoneNumber":
-        if (!/^\d+$/.test(value)) {
-          error = "Please enter a valid phone number (only numbers allowed)";
-        } else if (value.trim() === "") {
-          error = "This field is required";
-        }
-        break;
-      case "address":
-        if (value.trim() === "") {
-          error = "This field is required";
-        }
-        break;
-      default:
-        break;
+    if (value.trim() === "") {
+      error = "This field is required";
+    } else {
+      switch (name) {
+        case "medications_name":
+          if (!/^[a-zA-Z\s]+$/.test(value)) {
+            error = "Please enter a valid medicine name (only letters and spaces allowed)";
+          }
+          break;
+        case "medications_dosage":
+          if (!/^\d+(\.\d+)?$/.test(value)) {
+            error = "Please enter a valid dosage (only numbers and decimal points allowed)";
+          }
+          break;
+        case "medications_quantity":
+          if (!/^\d+$/.test(value)) {
+            error = "Please enter a valid quantity (only whole numbers allowed)";
+          }
+          break;
+        case "patientName":
+          if (!/^[a-zA-Z\s]+$/.test(value)) {
+            error = "Please enter a valid patient name (only letters and spaces allowed)";
+          }
+          break;
+        case "diagnosis":
+          // No regex validation needed, just check for empty value
+          break;
+        case "email":
+          if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(value)) {
+            error = "Please enter a valid email address";
+          }
+          break;
+        case "phoneNumber":
+          if (!/^\d+$/.test(value)) {
+            error = "Please enter a valid phone number (only numbers allowed)";
+          }
+          break;
+        case "clinicAddress":
+          // No regex validation needed, just check for empty value
+          break;
+        default:
+          break;
+      }
     }
 
     setErrors((prevErrors) => ({ ...prevErrors, [name]: error }));
@@ -167,29 +168,11 @@ const PrescriptionsManagement = () => {
         await addDoc(prescriptionRef, {
           ...prescriptionData,
           clinicAdminUid,
-          date: new Date().toISOString(),
+          createdAt: new Date().toISOString(),
         });
         fetchPrescriptions();
-        setPrescriptionData({
-          medicineName: "",
-          dosage: "",
-          quantity: "",
-          patientName: "",
-          diagnosis: "",
-          email: "",
-          phoneNumber: "",
-          address: "",
-        });
-        setErrors({
-          medicineName: "",
-          dosage: "",
-          quantity: "",
-          patientName: "",
-          diagnosis: "",
-          email: "",
-          phoneNumber: "",
-          address: "",
-        });
+        setPrescriptionData(emptyPrescription);
+        setErrors(emptyPrescription);
         setSnackbarMessage("Prescription created successfully!");
         setOpenSnackbar(true);
       } catch (error) {
@@ -203,46 +186,31 @@ const PrescriptionsManagement = () => {
   };
 
   const handleCancel = () => {
-    setPrescriptionData({
-      medicineName: "",
-      dosage: "",
-      quantity: "",
-      patientName: "",
-      diagnosis: "",
-      email: "",
-      phoneNumber: "",
-      address: "",
-    });
-    setErrors({
-      medicineName: "",
-      dosage: "",
-      quantity: "",
-      patientName: "",
-      diagnosis: "",
-      email: "",
-      phoneNumber: "",
-      address: "",
-    });
+    setPrescriptionData(emptyPrescription);
+    setErrors(emptyPrescription);
+    navigate("/prescriptions");
   };
 
   const fetchPrescriptions = async () => {
-    const prescriptionsRef = collection(db, "clinics_prescriptions");
-    const q = query(
-      prescriptionsRef,
-      where("clinicAdminUid", "==", clinicAdminUid)
-    );
-
     try {
+      setLoading(true);
+      const prescriptionsRef = collection(db, "clinics_prescriptions");
+      const q = query(
+        prescriptionsRef,
+        where("clinicAdminUid", "==", clinicAdminUid)
+      );
       const querySnapshot = await getDocs(q);
+
       const prescriptionsData = querySnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
       setPrescriptions(prescriptionsData);
-      setLoading(false);
     } catch (error) {
       setError(error);
       console.error("Error fetching prescriptions: ", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -357,11 +325,11 @@ const PrescriptionsManagement = () => {
                     label={t("medicineName")}
                     variant="outlined"
                     fullWidth
-                    name="medicineName"
-                    value={prescriptionData.medicineName}
+                    name="medications_name"
+                    value={prescriptionData.medications[0].name}
                     onChange={handleInputChange}
-                    error={errors.medicineName !== ""}
-                    helperText={errors.medicineName}
+                    error={!!errors.medications_name}
+                    helperText={errors.medications_name || ""}
                     InputProps={{
                       style: {
                         borderRadius: "16px",
@@ -375,11 +343,11 @@ const PrescriptionsManagement = () => {
                     label={t("dosage")}
                     variant="outlined"
                     fullWidth
-                    name="dosage"
-                    value={prescriptionData.dosage}
+                    name="medications_dosage"
+                    value={prescriptionData.medications[0].dosage}
                     onChange={handleInputChange}
-                    error={errors.dosage !== ""}
-                    helperText={errors.dosage}
+                    error={!!errors.medications_dosage}
+                    helperText={errors.medications_dosage || ""}
                     InputProps={{
                       style: {
                         borderRadius: "16px",
@@ -393,11 +361,11 @@ const PrescriptionsManagement = () => {
                     label={t("quantity")}
                     variant="outlined"
                     fullWidth
-                    name="quantity"
-                    value={prescriptionData.quantity}
+                    name="medications_quantity"
+                    value={prescriptionData.medications[0].quantity}
                     onChange={handleInputChange}
-                    error={errors.quantity !== ""}
-                    helperText={errors.quantity}
+                    error={!!errors.medications_quantity}
+                    helperText={errors.medications_quantity || ""}
                     InputProps={{
                       style: {
                         borderRadius: "16px",
@@ -414,8 +382,8 @@ const PrescriptionsManagement = () => {
                     name="patientName"
                     value={prescriptionData.patientName}
                     onChange={handleInputChange}
-                    error={errors.patientName !== ""}
-                    helperText={errors.patientName}
+                    error={!!errors.patientName}
+                    helperText={errors.patientName || ""}
                     InputProps={{
                       style: {
                         borderRadius: "16px",
@@ -485,11 +453,11 @@ const PrescriptionsManagement = () => {
                     label={t("address")}
                     variant="outlined"
                     fullWidth
-                    name="address"
-                    value={prescriptionData.address}
+                    name="clinicAddress"
+                    value={prescriptionData.clinicAddress}
                     onChange={handleInputChange}
-                    error={errors.address !== ""}
-                    helperText={errors.address}
+                    error={!!errors.clinicAddress}
+                    helperText={errors.clinicAddress || ""}
                     InputProps={{
                       style: {
                         borderRadius: "16px",
@@ -564,16 +532,16 @@ const PrescriptionsManagement = () => {
                               {row.patientName}
                             </TableCell>
                             <TableCell sx={styles?.tableRow}>
-                              {row.medicineName}
+                              {row.medications[0].name}
                             </TableCell>
                             <TableCell sx={styles?.tableRow}>
-                              {row.dosage}
+                              {row.medications[0].dosage}
                             </TableCell>
                             <TableCell sx={styles?.tableRow}>
                               {row.email}
                             </TableCell>
                             <TableCell sx={styles?.tableRow}>
-                              {dayjs(row.date).format("DD MMM, YYYY HH:MM")}
+                              {dayjs(row.createdAt).format("DD MMM, YYYY HH:MM")}
                             </TableCell>
                           </TableRow>
                         ))}

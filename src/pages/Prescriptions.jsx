@@ -32,8 +32,7 @@ export default function Prescriptions() {
   const navigate = useNavigate();
   const [t] = useTranslation();
   const [clinicAdminUid, setClinicAdminUid] = useState("");
-  const [unProcessedSubscriptionPage, setUnProcessedSubscriptionPage] =
-    useState(1);
+  const [unProcessedSubscriptionPage, setUnProcessedSubscriptionPage] = useState(1);
   const [allSubscriptionPage, setAllSubscriptionPage] = useState(1);
   const [clientPage, setClientPage] = useState(1);
   const [rowsPerPage] = useState(10);
@@ -478,10 +477,12 @@ export default function Prescriptions() {
         ...doc.data(),
       }));
       setAllPrescriptions(prescriptionsData);
-      setLoading(false);
     } catch (error) {
       setError(error);
       console.error("Error fetching prescriptions: ", error);
+    } finally {
+      setLoading(false);
+      console.log(clinicAdminUid);
     }
   };
 
@@ -498,6 +499,11 @@ export default function Prescriptions() {
     });
     return unsubscribe;
   }, []);
+
+  const parseDateString = (dateString) => {
+    const [month, day, year] = dateString.split('/');
+    return new Date(`20${year}`, month - 1, day);
+  };
 
   return (
     <ThemeProvider theme={theme}>
@@ -777,16 +783,16 @@ export default function Prescriptions() {
                             {row.patientName}
                           </TableCell>
                           <TableCell sx={styles?.tableRow}>
-                            {row.medicineName}
+                            {row.medications[0].name}
                           </TableCell>
                           <TableCell sx={styles?.tableRow}>
-                            {row.dosage}
+                            {row.medications[0].dosage}
                           </TableCell>
                           <TableCell sx={styles?.tableRow}>
                             {row.email}
                           </TableCell>
                           <TableCell sx={styles?.tableRow}>
-                            {dayjs(row.date).format("DD MMM, YYYY HH:MM")}
+                            {dayjs(row.date).format("DD MMM, YYYY HH:mm")}
                           </TableCell>
                         </TableRow>
                       ))}
